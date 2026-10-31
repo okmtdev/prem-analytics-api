@@ -1,169 +1,169 @@
 # prem-analytics-api
 
-[PremAnalytics](https://premianalytics.com) の Web API を使って、プレミアリーグの統計データから
-**インサイトレポート（Markdown / JSON）を自動生成する CLI のサンプルコード**です。
+A dependency-free Node.js CLI that turns Premier League data from the
+[PremAnalytics](https://premianalytics.com) Web API into an **insights report**
+(Markdown + JSON), in English or Japanese.
 
-依存パッケージなし・Node.js だけで動きます。API キーを `.env` に書いて 1 コマンド実行するだけで、
-`reports/` 配下に日本語（または英語）のレポートが出力されます。
+Paste your API key into `.env`, run one command, and a report like the ones
+below lands in `reports/`.
 
-- 生成例（日本語）: [reports/premier-league-report-26-27-2026-10-31.md](reports/premier-league-report-26-27-2026-10-31.md)
-- 生成例（英語 + Arsenal 特集）: [reports/premier-league-report-26-27-2026-10-31-en-arsenal.md](reports/premier-league-report-26-27-2026-10-31-en-arsenal.md)
+- Sample report (English, with an Arsenal deep dive): [reports/premier-league-report-26-27-2026-10-31-en-arsenal.md](reports/premier-league-report-26-27-2026-10-31-en-arsenal.md)
+- Sample report (Japanese): [reports/premier-league-report-26-27-2026-10-31.md](reports/premier-league-report-26-27-2026-10-31.md)
 
-> English quick start is at the bottom of this page.
+The code is meant to be read as much as run: it shows how to authenticate,
+respect the monthly quota, cache responses, and derive insights from the raw
+endpoints. Fork it and add your own.
 
-## レポートに含まれるインサイト
+## What is in the report
 
-| セクション | 内容 |
+| Section | Insights |
 | --- | --- |
-| エグゼクティブサマリー | 首位争い・好調/不調クラブ・得点傾向・得点王・逆転劇・「幸運度」を箇条書きで要約 |
-| 順位表 | 勝点/試合、直近5試合のフォーム、チーム得点王付きの順位表 |
-| 優勝争い・残留争い・勢い | 首位との差、CL 圏ボーダー、残留ライン、フォームと順位の乖離（上昇気流 / 失速中）、得失点差から見た期待勝点との差 |
-| ホーム / アウェイ | リーグ全体のホーム勝率、ホーム最強 / アウェイ最強、要塞型 / 旅人型クラブ |
-| 攻撃 | 得点、シュート数、枠内率、決定率（効率的 / 非効率）、PK 依存度、平均年齢 |
-| 守備 | 失点、被シュート、セーブ率、クリーンシート、シュート抑止力、GK 頼み度 |
-| ゴールキーパー | セーブ率、クリーンシート、失点/90、最も忙しい GK |
-| ポゼッションと結果 | 支配率と勝点の相関、カウンター型 / 持たされ型クラブ、「支配率で上回った側の勝率」 |
-| 選手 | 得点・アシスト・G+A・90分あたり、決定力、出場中の得失点差（+/-）、スーパーサブ、フル出場、U-21 主力、ベテラン、被ファウル、カード、タックル、国籍の内訳 |
-| 試合の傾向 | 大勝 / 多得点試合、よく出るスコア、節ごとの得点、ゴールの時間帯、終盤の決勝点 / 同点弾、逆転劇、観客動員 |
-| 規律とレフェリー | カード・ファウルのクラブ別集計、主審別のカード数 / PK 判定 |
-| 次節の見どころ | 次節の全カードと両チームの順位・フォーム、注目カード、直接対決 |
-| 最新の AI 試合レポート | PremAnalytics が公開している試合レポートのタイトル・抜粋・ハイライト動画リンク |
-| クラブ特集（任意） | `--club` で指定したクラブのリーグ内順位（各指標）、選手、全結果、今後の日程 |
+| Executive summary | Title race, form teams, scoring trends, top scorer, comebacks, "luck index" in a few bullets |
+| League table | Full table with points per game, last-five form and each club's top scorer |
+| Title race, relegation and momentum | Gap at the top, top-four line, gap to safety, form vs position (risers / fallers), expected points from goal difference |
+| Home and away | League-wide home win rate, best home / away sides, fortresses and road warriors |
+| Attack | Goals, shots, accuracy, conversion (clinical / wasteful), penalty reliance, squad age |
+| Defence | Goals conceded, shots faced, save rate, clean sheets, shot suppression, keeper reliance |
+| Goalkeepers | Save percentage, clean sheets, goals against per 90, busiest keepers |
+| Possession and results | Correlation between possession and points, counter-punchers vs sterile domination, how often the side with more possession wins |
+| Players | Scorers, assists, G+A, per-90 rates, finishing, on-pitch goal difference, super-subs, ever-presents, U-21 regulars, veterans, fouls, cards, tackles, nationalities |
+| Match trends | Biggest wins, highest-scoring games, common scorelines, goals by matchweek, goal timing, late winners, comebacks, attendance |
+| Discipline and referees | Cards and fouls per club, cards and penalties per referee |
+| Next up | Every fixture of the next matchweek with rank and form, pick of the round, six-pointers |
+| Latest AI post-match reports | Titles, excerpts and highlight links of PremAnalytics' published reports |
+| Club focus (optional) | `--club` adds league ranks for every metric, players, all results and upcoming fixtures for one club |
 
-## 必要なもの
+## Requirements
 
-- Node.js 20 以上（`node --version` で確認）
-- PremAnalytics の API キー（`pak_...` 形式）
-  - [premianalytics.com](https://premianalytics.com) にログイン → **Settings > Web API** で発行できます
-  - API キーは Data Supporter / Data Ultras プランで利用できます（Data Fan は不可）
+- Node.js 20 or newer (`node --version`)
+- A PremAnalytics API key (`pak_...`)
+  - Sign in at [premianalytics.com](https://premianalytics.com) and open **Settings > Web API**
+  - Keys are available on the Data Supporter and Data Ultras plans (not on Data Fan)
 
-## セットアップと実行
+## Quick start
 
 ```bash
-git clone <this repository>
+git clone https://github.com/okmtdev/prem-analytics-api.git
 cd prem-analytics-api
 
-# API キーを .env に設定（.env は git 管理外です）
 cp .env.example .env
-#   -> エディタで PREM_API_KEY=pak_xxxx を自分のキーに書き換える
+# edit .env and set PREM_API_KEY=pak_... to your own key (.env is git-ignored)
 
-# レポートを生成（今シーズン・日本語・Markdown + JSON）
-npm run report
-#   -> reports/premier-league-report-<season>-<date>.md / .json
+node bin/prem-report.js --lang en
+# -> reports/premier-league-report-<season>-<date>-en.md and .json
 ```
 
-`npm install` は不要です（依存パッケージがありません）。
+No `npm install` is needed: the project has no dependencies.
 
-### よく使うオプション
+### Common options
 
 ```bash
-node bin/prem-report.js --lang en                  # 英語レポート
-node bin/prem-report.js --club "Arsenal"           # クラブ特集セクションを追加
-node bin/prem-report.js --season 25/26             # 過去シーズン
-node bin/prem-report.js --format md                # Markdown のみ
-node bin/prem-report.js --stdout --format md       # 標準出力にも表示
-node bin/prem-report.js --api-key pak_xxx          # .env を使わずキーを直接指定
-node bin/prem-report.js --offline --lang en        # キャッシュだけで再生成（API 消費ゼロ）
-node bin/prem-report.js --help                     # 全オプション
+node bin/prem-report.js --lang en --club "Arsenal"   # English report plus a club deep dive
+node bin/prem-report.js                              # Japanese report (default language)
+node bin/prem-report.js --season 25/26               # a past season
+node bin/prem-report.js --format md --stdout         # Markdown only, also printed to stdout
+node bin/prem-report.js --api-key pak_xxx            # pass the key directly instead of .env
+node bin/prem-report.js --offline --lang ja          # re-render from the local cache, zero API calls
+node bin/prem-report.js --help                       # all options
 ```
 
-| オプション | 説明 |
+| Option | Description |
 | --- | --- |
-| `-k, --api-key <key>` | API キー。省略時は環境変数 `PREM_API_KEY`（`.env` から自動読込） |
-| `-s, --season <yy/yy>` | シーズン。例 `25/26`。省略時は今シーズン |
-| `-l, --lang <ja\|en>` | レポートの言語（既定 `ja`。環境変数 `PREM_REPORT_LANG` でも指定可） |
-| `-c, --club <name>` | クラブ特集を追加。部分一致可（例 `arsenal`） |
-| `-o, --out <dir>` | 出力先ディレクトリ（既定 `reports`） |
-| `-f, --format <list>` | `md,json` から選択（既定は両方） |
-| `--name <basename>` | 出力ファイル名（拡張子なし） |
-| `--stdout` | Markdown を標準出力にも書き出す |
-| `--no-reports` | AI 試合レポートの取得をスキップ（リクエストを 1 回節約） |
-| `--no-cache` | キャッシュを無視して必ず API を呼ぶ |
-| `--offline` | API を呼ばずキャッシュだけで生成 |
-| `--cache-dir <dir>` / `--cache-ttl <h>` | キャッシュ先（既定 `.cache`）と有効時間（既定 6 時間） |
-| `-v, --verbose` | 各リクエストをログ出力 |
+| `-k, --api-key <key>` | API key. Defaults to `PREM_API_KEY` (loaded from `.env`) |
+| `-s, --season <yy/yy>` | Season, e.g. `25/26`. Defaults to the current season |
+| `-l, --lang <ja\|en>` | Report language (default `ja`; `PREM_REPORT_LANG` also works) |
+| `-c, --club <name>` | Add a club-focus section. Partial names work (`arsenal`) |
+| `-o, --out <dir>` | Output directory (default `reports`) |
+| `-f, --format <list>` | `md`, `json` or both (default both) |
+| `--name <basename>` | Output file name without extension |
+| `--stdout` | Also print the Markdown to stdout |
+| `--no-reports` | Skip the AI post-match reports section (saves one request) |
+| `--no-cache` | Ignore the cache and always call the API |
+| `--offline` | Build the report from the cache only |
+| `--cache-dir <dir>` / `--cache-ttl <h>` | Cache location (default `.cache`) and freshness (default 6 hours) |
+| `-v, --verbose` | Log every request |
 
-## API 利用量について
+## API usage and quota
 
-- フルレポート 1 回の生成で **16 リクエスト**（AI レポート込みで 17）を消費します。
-- レスポンスは `.cache/` にディスクキャッシュされ（既定 6 時間）、同じデータで `--lang` や `--club` を変えて
-  再生成してもリクエストは消費されません。
-- 実行後に `quota: 24/300 used this month` のように月間クォータの残量が表示されます。
-- Data Supporter プランは **月 300 リクエスト**なので、1 日 1 回程度の生成が目安です。
-- 429（レート制限）が返った場合は `Retry-After` に従って自動で再試行します。
+- A full report costs **16 requests** (17 with AI reports).
+- Responses are cached on disk in `.cache/` (6 hours by default). Re-running with a different
+  `--lang`, `--club` or `--format` costs nothing.
+- The CLI prints the monthly quota after every run, e.g. `quota: 24/300 used this month`.
+- The Data Supporter plan allows **300 requests per month**, so roughly one fresh report a day is the budget.
+- On a 429 response the client waits for `Retry-After` and retries.
 
-## リポジトリ構成
+## Project layout
 
 ```
-bin/prem-report.js        CLI エントリポイント
-src/cli.js                引数の解釈・.env 読込・実行フロー
-src/client.js             PremAnalytics API クライアント（X-API-Key、429 リトライ、ディスクキャッシュ、クォータ表示）
-src/data.js               レポートに必要なデータセットの取得（どのエンドポイントを何回叩くか）
-src/analysis/             統計データからインサイトを計算する純粋関数群
-  table.js                順位表・優勝/残留争い・フォーム・期待勝点、ホーム/アウェイ
-  teams.js                攻撃・守備・GK・ポゼッション
-  players.js              選手ランキング・スーパーサブ・国籍
-  matches.js              試合結果・時間帯・逆転劇・観客・規律・レフェリー
-  upcoming.js             次節プレビュー・AI レポート
-  club.js                 クラブ特集
-src/render/markdown.js    インサイト → Markdown
-src/i18n.js               日本語 / 英語の文言
-test/                     ユニットテスト（node --test、実データ由来のフィクスチャ）
-reports/                  生成されたレポートの出力先
+bin/prem-report.js        CLI entry point
+src/cli.js                argument parsing, .env loading, run flow
+src/client.js             PremAnalytics API client (X-API-Key, 429 retry, disk cache, quota headers)
+src/data.js               which endpoints a report needs and how many times they are called
+src/analysis/             pure functions that turn raw rows into insights
+  table.js                table, title race, relegation, form, expected points, home/away
+  teams.js                attack, defence, goalkeepers, possession
+  players.js              player rankings, super-subs, nationalities
+  matches.js              results, goal timing, comebacks, attendance, discipline, referees
+  upcoming.js             next matchweek preview, AI reports
+  club.js                 club focus
+src/render/markdown.js    insights -> Markdown
+src/i18n.js               English / Japanese strings
+test/                     unit tests (node --test) on fixtures taken from real API responses
+reports/                  generated reports
 ```
 
-### 利用している API エンドポイント
+### Endpoints used
 
-| エンドポイント | 用途 |
+| Endpoint | Used for |
 | --- | --- |
-| `GET /league-table/overall`, `/league-table/home-away` | 順位表、ホーム / アウェイ |
-| `GET /squad/standard-stats`, `/squad/shooting`, `/squad/goalkeeping`, `/squad/misc-stats` | クラブ別の攻撃・守備・規律 |
-| `GET /opponent/shooting` | 被シュート |
-| `GET /team/standard-stats`, `/team/shooting`, `/team/playing-time`, `/team/misc-stats`, `/team/goalkeeper-stats` | 選手別スタッツ |
-| `GET /matches/fixtures`, `/matches/schedules`, `/matches/team-stats`, `/matches/events` | 結果、日程、試合別スタッツ、ゴール / カード / 交代イベント |
-| `GET /reports/postmatch` | AI 試合レポート |
+| `GET /league-table/overall`, `/league-table/home-away` | Table, home/away splits |
+| `GET /squad/standard-stats`, `/squad/shooting`, `/squad/goalkeeping`, `/squad/misc-stats` | Club attack, defence, discipline |
+| `GET /opponent/shooting` | Shots faced |
+| `GET /team/standard-stats`, `/team/shooting`, `/team/playing-time`, `/team/misc-stats`, `/team/goalkeeper-stats` | Player stats |
+| `GET /matches/fixtures`, `/matches/schedules`, `/matches/team-stats`, `/matches/events` | Results, schedule, per-match stats, goal / card / substitution events |
+| `GET /reports/postmatch` | AI post-match reports |
 
-API 全体の仕様は [PremAnalytics Web API ページ](https://premianalytics.com/ja/api/) と
-Swagger ドキュメント（`https://premie-backend-lvuzwxd3aq-uc.a.run.app/v1/docs`）を参照してください。
+The full API reference is on the [PremAnalytics Web API page](https://premianalytics.com/en/api/) and in the
+Swagger docs at `https://premie-backend-lvuzwxd3aq-uc.a.run.app/v1/docs`.
 
-## 自分でインサイトを追加するには
+## Adding your own insights
 
-1. `src/analysis/` に関数を追加し、`src/analysis/index.js` の `analyze()` の戻り値に含める
-2. `src/i18n.js` に日本語 / 英語の文言を追加する
-3. `src/render/markdown.js` でセクションを描画する
-4. `node --test` でテストを実行する（`test/fixtures/season-sample.json` は実 API レスポンスの抜粋）
+1. Add a function under `src/analysis/` and include its result in `analyze()` in `src/analysis/index.js`.
+2. Add the English and Japanese labels to `src/i18n.js`.
+3. Render the section in `src/render/markdown.js`.
+4. Run `npm test`. `test/fixtures/season-sample.json` is a trimmed copy of real API responses, so you can develop without spending quota.
 
-新しいエンドポイントが必要な場合は `src/client.js` にラッパーを追加し、`src/data.js` の `loadSeasonData()` で取得してください。
+If you need another endpoint, add a wrapper to `src/client.js` and fetch it in `loadSeasonData()` in `src/data.js`.
 
-## 開発
+## Development
 
 ```bash
-npm test                    # ユニットテスト
-node bin/prem-report.js -v  # リクエストログ付きで実行
+npm test                    # unit tests
+node bin/prem-report.js -v  # run with request logging
 ```
 
-## 注意事項
+## Notes
 
-- **API キーは絶対にコミットしないでください。** `.env` と `.cache/` は `.gitignore` 済みです。
-- 「期待勝点」「幸運度」「スーパーサブ」「GK 頼み度」などは本レポート独自の簡易指標です。
-- xG などデータ提供のないフィールドは API 上 `null` のため、レポートには含めていません。
-- クラブ名・選手名は API の英語表記のまま出力します。
+- **Never commit your API key.** `.env` and `.cache/` are git-ignored.
+- "Expected points", "luck index", "super-sub" and "keeper reliance" are simple metrics defined in this report, not official statistics.
+- Fields the API does not currently populate (for example xG) are `null` upstream and are therefore not shown.
+- Club and player names are printed as returned by the API.
+- Data in the sample reports belongs to [PremAnalytics](https://premianalytics.com); this project is an independent sample client and is not affiliated with them.
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
 
 ---
 
-## English quick start
+## 日本語
 
-A dependency-free Node.js CLI that turns [PremAnalytics](https://premianalytics.com) Web API data into a
-Premier League insights report (Markdown + JSON). Sample output: [reports/](reports/).
+[PremAnalytics](https://premianalytics.com) の Web API からプレミアリーグのインサイトレポート（Markdown / JSON）を生成する、依存パッケージなしの Node.js CLI です。
 
 ```bash
-cp .env.example .env            # paste your PremAnalytics API key (Settings > Web API)
-node bin/prem-report.js --lang en --club "Arsenal"
+cp .env.example .env        # PREM_API_KEY=pak_... を自分のキーに書き換える（.env は git 管理外）
+node bin/prem-report.js     # 日本語レポートを reports/ に出力
+node bin/prem-report.js --lang en --club "Arsenal"   # 英語 + クラブ特集
 ```
 
-Requires Node.js 20+. A full report costs 16 API requests (17 with AI reports); responses are cached in `.cache/`
-so re-rendering with other options is free. See `node bin/prem-report.js --help` for all options.
+Node.js 20 以上が必要です。フルレポート 1 回で API を 16 リクエスト（AI レポート込みで 17）消費し、レスポンスは `.cache/` にキャッシュされます。オプション一覧は `node bin/prem-report.js --help` を参照してください。生成例は [reports/](reports/) にあります。

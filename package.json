@@ -2,6 +2,14 @@
   "name": "prem-analytics-report",
   "version": "0.1.0",
   "description": "CLI sample that turns PremAnalytics API data into a Premier League insights report (Markdown / JSON).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/okmtdev/prem-analytics-api.git"
+  },
+  "homepage": "https://github.com/okmtdev/prem-analytics-api#readme",
+  "bugs": {
+    "url": "https://github.com/okmtdev/prem-analytics-api/issues"
+  },
   "type": "module",
   "license": "MIT",
   "private": true,
