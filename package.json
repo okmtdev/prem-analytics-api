@@ -1,0 +1,27 @@
+{
+  "name": "prem-analytics-report",
+  "version": "0.1.0",
+  "description": "CLI sample that turns PremAnalytics API data into a Premier League insights report (Markdown / JSON).",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "prem-report": "bin/prem-report.js"
+  },
+  "scripts": {
+    "report": "node bin/prem-report.js",
+    "report:en": "node bin/prem-report.js --lang en",
+    "test": "node --test"
+  },
+  "keywords": [
+    "premier-league",
+    "football",
+    "soccer",
+    "analytics",
+    "premanalytics",
+    "cli"
+  ]
+}

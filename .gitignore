@@ -147,3 +147,6 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# prem-analytics-report: local API response cache (never commit)
+.cache/
