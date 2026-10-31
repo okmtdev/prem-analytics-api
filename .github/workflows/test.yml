@@ -16,6 +16,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+      # Unit tests include rendering both report languages from a real-data fixture.
       - run: npm test
-      # Renders both languages from the test fixture to make sure the CLI still runs end to end.
-      - run: node --input-type=module -e "import('./test/fixtures/season-sample.json', { with: { type: 'json' } }).then(async (m) => { const { analyze } = await import('./src/analysis/index.js'); const { renderMarkdown } = await import('./src/render/markdown.js'); const i = analyze(m.default, { club: 'Arsenal' }); for (const lang of ['en', 'ja']) { const md = renderMarkdown(i, { lang }); if (!md.startsWith('# ')) throw new Error('render failed'); } console.log('render ok'); })"
